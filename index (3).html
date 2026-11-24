@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trilingua · CRM</title>
+<style>
+  :root{
+    --bg:#f6f5f2; --card:#ffffff; --ink:#1f2328; --muted:#6b7078; --line:#e4e2dc;
+    --accent:#1f6f6b; --accent-soft:#e3f0ee; --warn:#b4561b; --warn-soft:#fbeee4;
+    --bad:#a8322d; --bad-soft:#f8e4e2; --ok:#2e7d4f; --ok-soft:#e3f2e8;
+    --en:#2b5fa8; --fr:#7a3fa0; --it:#2e7d4f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}
+  header{background:var(--card);border-bottom:1px solid var(--line);padding:14px 24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+  .marca{font-weight:700;font-size:18px}
+  .marca small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+  nav{display:flex;gap:6px;flex:1}
+  nav button{background:none;border:1px solid transparent;padding:8px 14px;border-radius:8px;font:inherit;cursor:pointer;color:var(--muted)}
+  nav button.activo{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  nav button:hover{color:var(--ink)}
+  .hoy{color:var(--muted);font-size:13px}
+  main{max-width:1180px;margin:0 auto;padding:24px}
+  h2{font-size:18px;margin:0 0 12px}
+  h3{font-size:15px;margin:0 0 10px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .kpi .etq{color:var(--muted);font-size:13px}
+  .kpi .valor{font-size:28px;font-weight:700;margin:4px 0}
+  .kpi .det{font-size:13px;color:var(--muted)}
+  .barra{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:8px}
+  .barra span{display:block;height:100%;background:var(--accent)}
+  .cols{display:grid;grid-template-columns:3fr 2fr;gap:16px}
+  @media(max-width:860px){.cols{grid-template-columns:1fr}}
+  .tarea{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+  .tarea:first-of-type{border-top:none}
+  .tarea .info{flex:1}
+  .tarea .nom{font-weight:600;cursor:pointer}
+  .tarea .nom:hover{text-decoration:underline}
+  .tarea .txt{font-size:13px;color:var(--muted)}
+  .chip{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap}
+  .c-Cobro{background:var(--bad-soft);color:var(--bad)}
+  .c-Riesgo{background:var(--warn-soft);color:var(--warn)}
+  .c-Seguimiento{background:var(--accent-soft);color:var(--accent)}
+  .c-Examen{background:#ece8f6;color:#5b3f99}
+  .c-Agenda{background:#eef0f3;color:var(--muted)}
+  .e-activo{background:var(--ok-soft);color:var(--ok)}
+  .e-interesado{background:var(--accent-soft);color:var(--accent)}
+  .e-baja{background:#eef0f3;color:var(--muted)}
+  .e-perdido{background:#f3ecec;color:#8a5a5a}
+  .i-Inglés{color:var(--en)} .i-Francés{color:var(--fr)} .i-Italiano{color:var(--it)}
+  button.btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+  button.btn.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+  button.btn.peligro{background:var(--bad)}
+  button.btn:hover{opacity:.9}
+  .filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  input,select,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+  .filtros input{flex:1;min-width:220px}
+  table{width:100%;border-collapse:collapse;background:var(--card)}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);font-size:14px}
+  th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#faf9f6}
+  .tabla-wrap{border:1px solid var(--line);border-radius:12px;overflow:auto}
+  .vacio{color:var(--muted);padding:12px 0;font-size:14px}
+  .mini{display:flex;align-items:flex-end;gap:14px;height:120px;margin-top:10px}
+  .mini div{flex:1;text-align:center;font-size:12px;color:var(--muted)}
+  .mini .col{background:var(--accent);border-radius:6px 6px 0 0;margin:0 auto 6px;width:60%}
+  .lista-baja li{margin-bottom:6px;font-size:14px}
+  .lista-baja{padding-left:18px;margin:0}
+  /* modal */
+  #modal{position:fixed;inset:0;background:rgba(20,22,25,.45);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;z-index:10}
+  #modal.abierto{display:flex}
+  .ficha{background:var(--card);border-radius:14px;width:100%;max-width:880px;padding:22px}
+  .ficha-cab{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .ficha-cab h2{margin:0;flex:1}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .grid label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:4px}
+  .grid .ancho{grid-column:1/-1}
+  .seccion{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+  .fila-acc{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  .hist{list-style:none;padding:0;margin:0}
+  .hist li{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;display:flex;gap:12px}
+  .hist .f{color:var(--muted);width:96px;flex-shrink:0}
+  .hist .t{font-weight:600;width:120px;flex-shrink:0}
+  .aviso{font-size:12px;color:var(--muted);text-align:center;padding:20px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+  .toast.ver{opacity:1}
+  .bandera{display:inline-block;width:18px;height:12px;vertical-align:-1px;margin-right:5px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.12);overflow:hidden}
+  .bandera svg{display:block;width:100%;height:100%}
+  a.wa{display:inline-flex;align-items:center;gap:5px;background:#25d366;color:#fff;text-decoration:none;border-radius:8px;padding:7px 10px;font-size:13px;white-space:nowrap}
+  a.wa:hover{opacity:.9}
+  a.wa svg{width:15px;height:15px;fill:#fff}
+  .grupos{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+  .grupo h3{margin:0}
+  .grupo .hor{color:var(--muted);font-size:13px;margin-bottom:10px}
+  .grupo .ocup{display:flex;justify-content:space-between;font-size:13px;margin-top:10px}
+  .barra.lleno span{background:var(--ok)} .barra.medio span{background:var(--accent)} .barra.bajo span{background:var(--warn)}
+  .nombres{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .nombres span{font-size:12px;background:#f1efea;border-radius:10px;padding:3px 8px;cursor:pointer}
+  .nombres span.int{background:var(--accent-soft);color:var(--accent)}
+  .nombres span:hover{text-decoration:underline}
+  .origen{margin-top:4px}
+  .origen .fila{margin-bottom:12px}
+  .origen .cab{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+  .origen .doble{position:relative;height:14px;background:var(--line);border-radius:4px;overflow:hidden}
+  .origen .doble .l{position:absolute;left:0;top:0;bottom:0;background:#b9d8d4}
+  .origen .doble .m{position:absolute;left:0;top:0;bottom:0;background:var(--accent)}
+  .leyenda{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:12px}
+  .leyenda i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<header>
+  <div class="marca">Trilingua<small>Academia de inglés, francés e italiano · CRM</small></div>
+  <nav>
+    <button data-vista="panel" onclick="irA('panel')">Panel</button>
+    <button data-vista="alumnos" onclick="irA('alumnos')">Alumnos</button>
+    <button data-vista="grupos" onclick="irA('grupos')">Grupos</button>
+    <button data-vista="nuevo" onclick="irA('nuevo')">Nuevo alumno</button>
+  </nav>
+  <span class="hoy" id="hoy"></span>
+</header>
+<main id="app"></main>
+<div class="aviso">Todos los datos son ficticios. <button class="btn sec" onclick="restablecer()">Restablecer datos de demo</button></div>
+<div id="modal" onclick="if(event.target===this)cerrarFicha()"><div class="ficha" id="ficha"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================== Utilidades de fecha y formato ================== */
+const VERSION_DATOS = 3;
+const CLAVE = 'crm-trilingua';
+const HOY = new Date(); HOY.setHours(0,0,0,0);
+const pad = n => String(n).padStart(2,'0');
+const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const dia = off => { const d = new Date(HOY); d.setDate(d.getDate()+off); return iso(d); };
+const hoyISO = iso(HOY);
+const mesKey = off => { const d = new Date(HOY.getFullYear(), HOY.getMonth()+off, 1); return d.getFullYear()+'-'+pad(d.getMonth()+1); };
+const aFecha = s => new Date(s+'T00:00:00');
+const diasDesde = s => Math.round((HOY - aFecha(s))/86400000);
+const fmtFecha = s => s ? aFecha(s).toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}) : '';
+const fmtMes = k => { const [y,m]=k.split('-'); const t = new Date(+y,+m-1,1).toLocaleDateString('es-ES',{month:'long',year:'numeric'}); return t.charAt(0).toUpperCase()+t.slice(1); };
+const eur = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')+' €';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const IDIOMAS = ['Inglés','Francés','Italiano'];
+const NIVELES = ['A1','A2','B1','B2','C1'];
+const MODALIDADES = ['Grupo','Particular','Online'];
+const OBJETIVOS = ['Trabajo','Examen oficial','Viaje','Personal'];
+const ORIGENES = ['Web','Recomendación','Instagram','Google'];
+const TIPOS_CONTACTO = ['Llamada','WhatsApp','Email','Visita','Clase de prueba','Prueba de nivel'];
+
+/* ================== Datos ficticios (cargados en el código) ================== */
+// [nombre, teléfono, idioma, nivel, modalidad, horario, cuota €/mes, estado, objetivo, origen, alta (días desde hoy), faltas seguidas, examen [nombre, días hasta], extra]
+const SEMILLA = [
+ ['Lucía Romero Vidal','612 345 118','Inglés','B2','Grupo','M y J 19:00',90,'activo','Examen oficial','Web',-400,0,['B2 First',21]],
+ ['Javier Martín Soler','634 210 457','Inglés','B1','Grupo','L y X 19:30',85,'activo','Trabajo','Recomendación',-300,0,null],
+ ['Marta Castillo Ruiz','655 908 231','Francés','A2','Grupo','M y J 18:00',85,'activo','Viaje','Instagram',-120,0,null],
+ ['Andrés Navarro Gil','677 432 905','Inglés','C1','Grupo','M y J 20:30',95,'activo','Examen oficial','Web',-500,3,['C1 Advanced',45]],
+ ['Elena Ortega Prieto','622 781 064','Italiano','A1','Grupo','V 18:00',60,'activo','Personal','Instagram',-60,0,null],
+ ['Sergio Molina Herrera','648 115 372','Inglés','B2','Particular','Martes 17:00',140,'activo','Trabajo','Recomendación',-200,0,null],
+ ['Carmen Delgado Ramos','611 563 820','Francés','B1','Grupo','L y X 20:00',85,'activo','Examen oficial','Web',-350,0,['DELF B1',28]],
+ ['Raúl Iglesias Moreno','699 204 517','Inglés','A2','Grupo','L y X 18:00',85,'activo','Trabajo','Google',-85,4,null],
+ ['Nuria Sanz Cabrera','633 870 149','Italiano','B1','Grupo','V 19:30',60,'activo','Personal','Recomendación',-700,0,null],
+ ['Diego Rubio Fernández','684 339 702','Inglés','B1','Online','Jueves 21:00',120,'activo','Trabajo','Web',-150,0,null],
+ ['Irene Medina Lozano','627 014 386','Inglés','C1','Grupo','M y J 20:30',95,'activo','Examen oficial','Recomendación',-420,0,['C1 Advanced',45]],
+ ['Hugo Garrido Pascual','640 752 913','Francés','A2','Grupo','M y J 18:00',85,'activo','Trabajo','Instagram',-45,0,null],
+ ['Patricia León Santos','618 497 260','Inglés','B2','Grupo','M y J 19:00',90,'activo','Examen oficial','Web',-260,0,['B2 First',21]],
+ ['Óscar Vega Marín','672 186 534','Italiano','A1','Grupo','V 18:00',60,'activo','Viaje','Google',-30,0,null],
+ ['Laura Fuentes Crespo','695 621 078','Inglés','A2','Grupo','L y X 18:00',85,'activo','Personal','Web',-180,0,null],
+ ['Alberto Cano Domínguez','609 348 715','Francés','B1','Particular','Lunes 17:00',140,'activo','Trabajo','Recomendación',-330,0,null],
+ ['Silvia Prieto Reyes','656 073 492','Inglés','B1','Grupo','L y X 19:30',85,'activo','Trabajo','Instagram',-75,3,null],
+ ['Tomás Herrero Arias','638 925 146','Inglés','B2','Grupo','M y J 19:00',90,'activo','Trabajo','Google',-140,0,null],
+ ['Beatriz Calvo Núñez','681 264 830','Italiano','B1','Grupo','V 19:30',60,'activo','Personal','Web',-240,0,null],
+ ['Manuel Pastor Vicente','624 810 357','Francés','A2','Online','Miércoles 21:00',120,'activo','Viaje','Web',-20,0,null],
+ ['Cristina Méndez Bravo','667 539 024','Inglés','C1','Particular','Viernes 17:00',140,'activo','Examen oficial','Recomendación',-380,0,['C1 Advanced',60]],
+ ['Rubén Domínguez Sáez','611 902 347','Inglés','A2','Grupo','L y X 18:00',85,'activo','Trabajo','Web',-210,0,null],
+ ['Noelia Torres Gómez','646 218 093','Inglés','A2','Grupo','L y X 18:00',85,'activo','Personal','Instagram',-160,0,null],
+ ['Francisco Ruiz Ortega','673 450 821','Inglés','A2','Grupo','L y X 18:00',85,'activo','Trabajo','Google',-260,0,null],
+ ['Mónica Herrera Lago','629 731 506','Inglés','B1','Grupo','L y X 19:30',85,'activo','Trabajo','Recomendación',-230,0,null],
+ ['Víctor Blanco Esteban','688 045 912','Inglés','B1','Grupo','L y X 19:30',85,'activo','Viaje','Web',-190,0,null],
+ ['Clara Vidal Montero','615 384 270','Inglés','B1','Grupo','L y X 19:30',85,'activo','Trabajo','Instagram',-55,0,null],
+ ['Ismael Santos Rey','652 907 143','Inglés','B1','Grupo','L y X 19:30',85,'activo','Personal','Google',-310,0,null],
+ ['Eva Núñez Castaño','634 562 018','Inglés','B2','Grupo','M y J 19:00',90,'activo','Examen oficial','Web',-280,0,['B2 First',21]],
+ ['Gonzalo Peña Mora','697 213 584','Inglés','B2','Grupo','M y J 19:00',90,'activo','Trabajo','Recomendación',-350,0,null],
+ ['Lorena Ibáñez Soto','621 875 309','Inglés','B2','Grupo','M y J 19:00',90,'activo','Trabajo','Web',-170,0,null],
+ ['Marcos Gil Arranz','640 391 726','Inglés','B2','Grupo','M y J 19:00',90,'activo','Trabajo','Instagram',-240,0,null],
+ ['Teresa Morales Vidal','658 120 437','Inglés','C1','Grupo','M y J 20:30',95,'activo','Trabajo','Recomendación',-600,0,null],
+ ['Álex Ferrer Bosch','613 794 258','Inglés','C1','Grupo','M y J 20:30',95,'activo','Examen oficial','Web',-450,0,['C1 Advanced',45]],
+ ['Julia Ramos Cerdán','682 337 915','Francés','A2','Grupo','M y J 18:00',85,'activo','Viaje','Web',-150,0,null],
+ ['Héctor Lozano Prats','625 468 031','Francés','A2','Grupo','M y J 18:00',85,'activo','Trabajo','Google',-220,0,null],
+ ['Inés Aguilar Coll','669 201 748','Francés','A2','Grupo','M y J 18:00',85,'activo','Personal','Instagram',-40,0,null],
+ ['Fernando Soler Rivas','617 652 390','Francés','B1','Grupo','L y X 20:00',85,'activo','Trabajo','Recomendación',-400,0,null],
+ ['Paula Crespo Marín','644 089 527','Francés','B1','Grupo','L y X 20:00',85,'activo','Examen oficial','Web',-270,0,['DELF B1',28]],
+ ['Ángel Moreno Sanz','690 314 862','Francés','B1','Grupo','L y X 20:00',85,'activo','Trabajo','Web',-320,0,null],
+ ['Rocío Benítez Lara','636 927 105','Italiano','A1','Grupo','V 18:00',60,'activo','Viaje','Instagram',-130,0,null],
+ ['Guillermo Prieto Vera','674 503 219','Italiano','A1','Grupo','V 18:00',60,'activo','Personal','Web',-95,0,null],
+ ['Natalia Vázquez Rey','610 248 693','Italiano','A1','Grupo','V 18:00',60,'activo','Viaje','Recomendación',-180,0,null],
+ ['Jaime Cabrera Luna','663 791 402','Italiano','B1','Grupo','V 19:30',60,'activo','Personal','Recomendación',-500,0,null],
+ ['Lidia Sáez Ortiz','628 456 187','Italiano','B1','Grupo','V 19:30',60,'activo','Personal','Google',-260,0,null],
+ ['Daniel Ríos Carmona','613 402 789','Inglés','B1','Grupo','L y X 19:30',85,'interesado','Trabajo','Web',null,0,null,{prueba:-5}],
+ ['Sara Gallego Ibáñez','645 197 360','Italiano','A1','Grupo','V 18:00',60,'interesado','Viaje','Instagram',null,0,null,{prueba:-4}],
+ ['Adrián Peña Vázquez','678 053 214','Francés','A2','Grupo','M y J 18:00',85,'interesado','Personal','Google',null,0,null,{prueba:2}],
+ ['Alicia Moya Benítez','630 688 451','Inglés','B2','Grupo','M y J 19:00',90,'interesado','Examen oficial','Web',null,0,null,{prueba:-1}],
+ ['Jorge Lorenzo Campos','652 371 908','Inglés','B1','Grupo','L y X 19:30',85,'baja','Trabajo','Web',-330,0,null,{baja:-30,motivo:'Cambio de horario en el trabajo'}],
+ ['Rosa Serrano Aguilar','687 940 263','Francés','B1','Grupo','L y X 20:00',85,'baja','Personal','Instagram',-280,0,null,{baja:-50,motivo:'Precio'}],
+ ['Iván Cortés Rojas','619 225 637','Italiano','A1','Grupo','V 18:00',60,'baja','Viaje','Google',-260,0,null,{baja:-200,motivo:'Se ha mudado de ciudad'}],
+ ['Carla Montes Rivas','615 230 948','Inglés','B1','Grupo','L y X 19:30',85,'perdido','Viaje','Instagram',null,0,null,{contacto:-40,prueba:-35,motivo:'El horario no le encaja'}],
+ ['Mario Esteve Pons','648 731 205','Italiano','A1','Grupo','V 18:00',60,'perdido','Viaje','Instagram',null,0,null,{contacto:-70,motivo:'Solo pedía precios'}],
+ ['Sofía Llorente Gil','627 394 816','Francés','A2','Grupo','M y J 18:00',85,'perdido','Personal','Instagram',null,0,null,{contacto:-25,prueba:-20,motivo:'Precio'}],
+ ['Iker Valero Ruiz','681 503 742','Inglés','A2','Grupo','L y X 18:00',85,'perdido','Personal','Instagram',null,0,null,{contacto:-110,motivo:'No contestó a los mensajes'}],
+ ['Andrea Molina Pardo','639 812 054','Inglés','B2','Grupo','M y J 19:00',90,'perdido','Examen oficial','Instagram',null,0,null,{contacto:-150,motivo:'Se apuntó a una academia online'}],
+ ['Lucas Rey Fuster','696 147 380','Italiano','B1','Grupo','V 19:30',60,'perdido','Personal','Instagram',null,0,null,{contacto:-55,motivo:'Solo pedía precios'}],
+ ['Marina Ortiz Salas','618 670 293','Inglés','C1','Grupo','M y J 20:30',95,'perdido','Trabajo','Google',null,0,null,{contacto:-80,prueba:-75,motivo:'El nivel del grupo era demasiado alto'}],
+ ['David Casas Ferrer','654 029 817','Francés','B1','Grupo','L y X 20:00',85,'perdido','Trabajo','Google',null,0,null,{contacto:-130,motivo:'Buscaba clases intensivas'}],
+ ['Celia Roca Medina','672 915 468','Inglés','B1','Grupo','L y X 19:30',85,'perdido','Trabajo','Google',null,0,null,{contacto:-35,motivo:'No contestó a los mensajes'}],
+ ['Enrique Mora Llopis','623 486 109','Inglés','B2','Grupo','M y J 19:00',90,'perdido','Trabajo','Web',null,0,null,{contacto:-90,motivo:'Precio'}],
+ ['Pilar Garrido Ros','640 758 321','Francés','A2','Grupo','M y J 18:00',85,'perdido','Viaje','Web',null,0,null,{contacto:-60,prueba:-55,motivo:'El horario no le encaja'}],
+ ['Raquel Soto Bermejo','685 263 970','Italiano','A1','Grupo','V 18:00',60,'perdido','Viaje','Web',null,0,null,{contacto:-170,motivo:'Lo deja para el año que viene'}],
+ ['Adolfo Vera Campos','612 849 537','Inglés','A2','Grupo','L y X 18:00',85,'perdido','Trabajo','Recomendación',null,0,null,{contacto:-100,prueba:-95,motivo:'El horario no le encaja'}],
+];
+// Recibos sin cobrar: nombre -> meses pendientes (0 = mes actual, -1 = mes anterior)
+const IMPAGOS = {'Andrés Navarro Gil':[0,-1],'Nuria Sanz Cabrera':[0],'Laura Fuentes Crespo':[0],'Tomás Herrero Arias':[0],'Víctor Blanco Esteban':[0]};
+
+function emailDe(nombre){
+  const p = nombre.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().split(' ');
+  return p[0]+'.'+p[1]+'@correo-ficticio.es';
+}
+
+function crearDatosDemo(){
+  const db = {version:VERSION_DATOS, seq:1, alumnos:[], pagos:[], contactos:[], hechas:[]};
+  const nid = () => db.seq++;
+  SEMILLA.forEach((r,i) => {
+    const [nombre,telefono,idioma,nivel,modalidad,horario,cuota,estado,objetivo,origen,altaOff,faltas,examen,extra] = r;
+    const a = {id:nid(), nombre, telefono, email:emailDe(nombre), idioma, nivel, modalidad, horario, cuota, estado, objetivo, origen,
+      alta: altaOff!=null ? dia(altaOff) : '', faltas, examen: examen ? {nombre:examen[0], fecha:dia(examen[1])} : {nombre:'',fecha:''},
+      fechaBaja: extra && extra.baja!=null ? dia(extra.baja) : '', motivoBaja: extra && extra.motivo || '', notas:''};
+    db.alumnos.push(a);
+    const c = (off,tipo,nota) => db.contactos.push({id:nid(), alumnoId:a.id, fecha:dia(off), tipo, nota});
+
+    if(estado==='perdido'){
+      const fin = (extra.prueba!=null ? extra.prueba : extra.contacto) + 4;
+      a.fechaBaja = dia(fin); a.motivoBaja = extra.motivo;
+      c(extra.contacto, origen==='Web'?'Email':'WhatsApp', 'Pide información desde '+origen);
+      if(extra.prueba!=null) c(extra.prueba, 'Clase de prueba', 'Asiste a la clase de prueba de '+idioma+' '+nivel);
+      c(fin, 'Llamada', 'No se matricula. Motivo: '+extra.motivo);
+      return;
+    }
+    if(estado==='interesado'){
+      c(extra.prueba-6, origen==='Web'?'Email':'WhatsApp', 'Pide información desde '+origen+'. Se agenda clase de prueba');
+      c(extra.prueba, 'Clase de prueba', extra.prueba<=0 ? 'Asiste a la clase de prueba de '+idioma+' '+nivel : 'Clase de prueba programada');
+      return;
+    }
+    // Alumnos matriculados (activos o ya dados de baja)
+    if(altaOff >= -100) c(altaOff-7, 'Clase de prueba', 'Clase de prueba antes de matricularse');
+    c(altaOff, 'Prueba de nivel', 'Prueba de nivel: entra en '+nivel);
+    if(estado==='activo') c(-((i*7)%40)-3, 'WhatsApp', 'Recordatorio de horario y material del mes');
+    if(estado==='baja') c(extra.baja, 'Llamada', 'Comunica la baja. Motivo: '+extra.motivo);
+
+    // Pagos de los últimos 3 meses
+    const limite = estado==='baja' ? aFecha(dia(extra.baja)) : null;
+    for(let m=-2; m<=0; m++){
+      const k = mesKey(m);
+      const inicioMes = aFecha(k+'-01');
+      const finMes = new Date(inicioMes.getFullYear(), inicioMes.getMonth()+1, 0);
+      if(aFecha(a.alta) > finMes) continue;
+      if(limite && limite < inicioMes) continue;
+      const pend = (IMPAGOS[nombre]||[]).includes(m);
+      db.pagos.push({id:nid(), alumnoId:a.id, mes:k, importe:cuota, estado: pend?'pendiente':'pagado'});
+    }
+  });
+  const andres = db.alumnos.find(a=>a.nombre==='Andrés Navarro Gil');
+  db.contactos.push({id:nid(), alumnoId:andres.id, fecha:dia(-10), tipo:'Email', nota:'Aviso de recibo devuelto del mes anterior'});
+  return db;
+}
+
+/* ================== Persistencia ================== */
+function cargar(){
+  try{
+    const s = localStorage.getItem(CLAVE);
+    if(s){ const d = JSON.parse(s); if(d.version===VERSION_DATOS) return d; }
+  }catch(e){}
+  return crearDatosDemo();
+}
+function guardar(){ try{ localStorage.setItem(CLAVE, JSON.stringify(db)); }catch(e){} }
+let db = cargar();
+const ui = {vista:'panel', busca:'', fIdioma:'', fEstado:'', fichaId:null};
+
+function restablecer(){
+  db = crearDatosDemo(); guardar(); cerrarFicha(); render(); aviso('Datos de demo restablecidos');
+}
+function aviso(t){ const el=document.getElementById('toast'); el.textContent=t; el.classList.add('ver'); clearTimeout(aviso._t); aviso._t=setTimeout(()=>el.classList.remove('ver'),1800); }
+
+/* ================== Banderas (SVG, se ven igual en Windows, Mac y móvil) ================== */
+const BANDERAS = {
+  'Inglés': '<svg viewBox="0 0 60 40" preserveAspectRatio="none"><rect width="60" height="40" fill="#012169"/><path d="M0,0L60,40M60,0L0,40" stroke="#fff" stroke-width="8"/><path d="M0,0L60,40M60,0L0,40" stroke="#C8102E" stroke-width="3"/><path d="M30,0V40M0,20H60" stroke="#fff" stroke-width="12"/><path d="M30,0V40M0,20H60" stroke="#C8102E" stroke-width="7"/></svg>',
+  'Francés': '<svg viewBox="0 0 3 2" preserveAspectRatio="none"><rect width="1" height="2" fill="#0055A4"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#EF4135"/></svg>',
+  'Italiano': '<svg viewBox="0 0 3 2" preserveAspectRatio="none"><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#CE2B37"/></svg>'
+};
+const bandera = idioma => BANDERAS[idioma] ? `<span class="bandera" title="${idioma}">${BANDERAS[idioma]}</span>` : '';
+
+/* ================== WhatsApp ================== */
+const ICONO_WA = '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3 1 2.5c.1.2 1.6 2.5 4 3.5 1.5.6 2 .7 2.8.6.4-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.4-.3z"/></svg>';
+const nombrePila = a => a.nombre.split(' ')[0];
+function waLink(a, msg, etiqueta){
+  const url = 'https://wa.me/34'+a.telefono.replace(/\D/g,'')+'?text='+encodeURIComponent(msg);
+  return `<a class="wa" href="${url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${esc(msg)}">${ICONO_WA}${etiqueta||'WhatsApp'}</a>`;
+}
+
+/* ================== Lógica de negocio ================== */
+const alumno = id => db.alumnos.find(a=>a.id===id);
+const contactosDe = id => db.contactos.filter(c=>c.alumnoId===id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+const pagosDe = id => db.pagos.filter(p=>p.alumnoId===id).sort((a,b)=>b.mes.localeCompare(a.mes));
+const ultimoContacto = id => contactosDe(id).find(c=>c.fecha<=hoyISO);
+const ultimaPrueba = id => contactosDe(id).find(c=>c.tipo==='Clase de prueba');
+
+function tareas(){
+  const t = [], mesAct = mesKey(0);
+  db.pagos.filter(p=>p.estado==='pendiente').forEach(p=>{
+    const a = alumno(p.alumnoId); if(!a) return;
+    const mesTxt = fmtMes(p.mes).split(' ')[0].toLowerCase();
+    t.push({id:'pago-'+p.id, tipo:'Cobro', prio:p.mes<mesAct?0:2, a, texto:'Recibo de '+fmtMes(p.mes).toLowerCase()+' sin cobrar ('+eur(p.importe)+')', accion:'pagar', pagoId:p.id,
+      msg:`Hola ${nombrePila(a)}, te escribimos de Trilingua. Te recordamos que el recibo de ${mesTxt} (${eur(p.importe)}) está pendiente. Puedes pagarlo en recepción o por Bizum. ¡Gracias!`});
+  });
+  db.alumnos.forEach(a=>{
+    if(a.estado==='interesado'){
+      const pr = ultimaPrueba(a.id);
+      if(pr){
+        const d = diasDesde(pr.fecha);
+        const despues = db.contactos.some(c=>c.alumnoId===a.id && c.fecha>pr.fecha);
+        if(d>=3 && !despues) t.push({id:'prueba-'+a.id+'-'+pr.fecha, tipo:'Seguimiento', prio:1, a, texto:'Hizo la clase de prueba hace '+d+' días y no se ha matriculado. Llamar', accion:'hecho',
+          msg:`Hola ${nombrePila(a)}, soy de Trilingua. ¿Qué tal te fue la clase de prueba de ${a.idioma.toLowerCase()}? Si te encajó, te guardamos plaza en el grupo de ${a.horario}.`});
+        else if(d<=0 && d>=-7) t.push({id:'agenda-'+a.id+'-'+pr.fecha, tipo:'Agenda', prio:4, a, texto: d===0?'Clase de prueba hoy':'Clase de prueba en '+(-d)+(d===-1?' día':' días'), accion:null,
+          msg:`Hola ${nombrePila(a)}, te recordamos tu clase de prueba de ${a.idioma.toLowerCase()} en Trilingua el ${fmtFecha(pr.fecha)}. ¡Te esperamos!`});
+      }
+    }
+    if(a.estado==='activo'){
+      if(a.faltas>=3) t.push({id:'faltas-'+a.id+'-'+a.faltas, tipo:'Riesgo', prio:1, a, texto:a.faltas+' faltas seguidas. Riesgo de baja: llamar', accion:'hecho',
+        msg:`Hola ${nombrePila(a)}, te hemos echado de menos en las últimas clases de ${a.idioma.toLowerCase()}. ¿Va todo bien? Si te viene mejor otro horario, te buscamos hueco.`});
+      if(a.examen && a.examen.fecha){
+        const d = -diasDesde(a.examen.fecha);
+        if(d>=0 && d<=30) t.push({id:'examen-'+a.id+'-'+a.examen.fecha, tipo:'Examen', prio:3, a, texto:a.examen.nombre+' en '+d+' días: confirmar inscripción y hacer simulacro', accion:'hecho',
+          msg:`Hola ${nombrePila(a)}, quedan ${d} días para el ${a.examen.nombre}. ¿Has hecho ya la inscripción? Esta semana hacemos un simulacro en clase.`});
+      }
+    }
+  });
+  return t.filter(x=>!db.hechas.includes(x.id)).sort((x,y)=>x.prio-y.prio);
+}
+
+function indicadores(){
+  const activos = db.alumnos.filter(a=>a.estado==='activo');
+  const porIdioma = IDIOMAS.map(i=>[i, activos.filter(a=>a.idioma===i).length]);
+  const mes = mesKey(0);
+  const pagosMes = db.pagos.filter(p=>p.mes===mes);
+  const previsto = pagosMes.reduce((s,p)=>s+p.importe,0);
+  const cobrado = pagosMes.filter(p=>p.estado==='pagado').reduce((s,p)=>s+p.importe,0);
+  // Conversión: alumnos con clase de prueba (ya hecha) en los últimos 90 días
+  const conPrueba = new Set(db.contactos.filter(c=>c.tipo==='Clase de prueba' && diasDesde(c.fecha)>=0 && diasDesde(c.fecha)<=90).map(c=>c.alumnoId));
+  const pruebas = [...conPrueba].map(alumno).filter(Boolean);
+  const convertidos = pruebas.filter(a=>a.estado==='activo'||a.estado==='baja').length;
+  const bajas = db.alumnos.filter(a=>a.estado==='baja' && a.fechaBaja && diasDesde(a.fechaBaja)<=90);
+  const historico = [-2,-1,0].map(m=>{ const k=mesKey(m); return [k, db.pagos.filter(p=>p.mes===k && p.estado==='pagado').reduce((s,p)=>s+p.importe,0)]; });
+  return {activos:activos.length, porIdioma, previsto, cobrado, pruebas:pruebas.length, convertidos, bajas, historico};
+}
+
+/* ================== Vistas ================== */
+function irA(v){ ui.vista=v; render(); window.scrollTo(0,0); }
+
+function render(){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('activo', b.dataset.vista===ui.vista));
+  const app = document.getElementById('app');
+  if(ui.vista==='panel') app.innerHTML = vistaPanel();
+  if(ui.vista==='alumnos') app.innerHTML = vistaAlumnos();
+  if(ui.vista==='nuevo') app.innerHTML = vistaNuevo();
+  if(ui.vista==='grupos') app.innerHTML = vistaGrupos();
+  if(ui.vista==='alumnos'){ const b=document.getElementById('busca'); if(b && ui._foco){ b.focus(); b.setSelectionRange(b.value.length,b.value.length); } }
+}
+
+function vistaPanel(){
+  const k = indicadores(), ts = tareas();
+  const pct = k.previsto ? Math.round(k.cobrado/k.previsto*100) : 0;
+  const conv = k.pruebas ? Math.round(k.convertidos/k.pruebas*100) : 0;
+  const maxH = Math.max(...k.historico.map(h=>h[1]),1);
+  return `
+  <div class="kpis">
+    <div class="card kpi"><div class="etq">Alumnos activos</div><div class="valor">${k.activos}</div>
+      <div class="det">${k.porIdioma.map(([i,n])=>`<span class="i-${i}">${bandera(i)}${i} ${n}</span>`).join(' · ')}</div></div>
+    <div class="card kpi"><div class="etq">Ingresos cobrados en ${fmtMes(mesKey(0)).toLowerCase()}</div><div class="valor">${eur(k.cobrado)}</div>
+      <div class="det">de ${eur(k.previsto)} previstos (${pct} %)</div><div class="barra"><span style="width:${pct}%"></span></div></div>
+    <div class="card kpi"><div class="etq">Conversión clase de prueba → matrícula</div><div class="valor">${conv} %</div>
+      <div class="det">${k.convertidos} de ${k.pruebas} clases de prueba en los últimos 90 días</div></div>
+    <div class="card kpi"><div class="etq">Bajas en los últimos 90 días</div><div class="valor">${k.bajas.length}</div>
+      <div class="det">Alumnos que no vuelven</div></div>
+  </div>
+  <div class="cols">
+    <div class="card">
+      <h2>Qué hay que hacer (${ts.length})</h2>
+      ${ts.length ? ts.map(tareaHTML).join('') : '<div class="vacio">No hay nada pendiente.</div>'}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <h3>Ingresos cobrados por mes</h3>
+        <div class="mini">${k.historico.map(([m,v])=>`<div><div class="col" style="height:${Math.round(v/maxH*80)}px"></div>${fmtMes(m).split(' ')[0]}<br><b style="color:var(--ink)">${eur(v)}</b></div>`).join('')}</div>
+      </div>
+      <div class="card">
+        <h3>De dónde vienen los alumnos</h3>
+        ${origenHTML()}
+      </div>
+      <div class="card">
+        <h3>Alumnos que no vuelven</h3>
+        ${k.bajas.length ? `<ul class="lista-baja">${k.bajas.map(a=>`<li><a href="#" onclick="abrirFicha(${a.id});return false">${esc(a.nombre)}</a> · ${bandera(a.idioma)}${a.idioma} · ${esc(a.motivoBaja)} (${fmtFecha(a.fechaBaja)})</li>`).join('')}</ul>` : '<div class="vacio">Ninguna baja reciente.</div>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+function origenHTML(){
+  const filas = ORIGENES.map(o=>{
+    const todos = db.alumnos.filter(a=>a.origen===o);
+    const matric = todos.filter(a=>a.estado==='activo'||a.estado==='baja');
+    const ingresos = todos.filter(a=>a.estado==='activo').reduce((s,a)=>s+a.cuota,0);
+    return {o, total:todos.length, matric:matric.length, ingresos};
+  }).sort((x,y)=>y.total-x.total);
+  const max = Math.max(...filas.map(f=>f.total),1);
+  return `<div class="leyenda"><span><i style="background:#b9d8d4"></i>Contactos</span><span><i style="background:var(--accent)"></i>Se matriculan</span></div>
+  <div class="origen">${filas.map(f=>`<div class="fila">
+    <div class="cab"><b>${f.o}</b><span>${f.matric} de ${f.total} (${f.total?Math.round(f.matric/f.total*100):0} %) · ${eur(f.ingresos)}/mes</span></div>
+    <div class="doble"><span class="l" style="width:${f.total/max*100}%"></span><span class="m" style="width:${f.matric/max*100}%"></span></div>
+  </div>`).join('')}</div>
+  <div class="det" style="font-size:12px;color:var(--muted)">€/mes = cuotas de los alumnos activos que llegaron por ese canal.</div>`;
+}
+
+const PLAZAS_GRUPO = 8;
+function vistaGrupos(){
+  const mapa = {};
+  db.alumnos.filter(a=>a.modalidad==='Grupo' && (a.estado==='activo'||a.estado==='interesado')).forEach(a=>{
+    const k = a.idioma+'|'+a.nivel+'|'+a.horario;
+    (mapa[k] = mapa[k] || {idioma:a.idioma, nivel:a.nivel, horario:a.horario, cuota:a.cuota, activos:[], interesados:[]});
+    (a.estado==='activo' ? mapa[k].activos : mapa[k].interesados).push(a);
+  });
+  const grupos = Object.values(mapa).sort((x,y)=>IDIOMAS.indexOf(x.idioma)-IDIOMAS.indexOf(y.idioma) || x.nivel.localeCompare(y.nivel));
+  const ocupadas = grupos.reduce((s,g)=>s+g.activos.length,0), totales = grupos.length*PLAZAS_GRUPO;
+  const ingresos = grupos.reduce((s,g)=>s+g.activos.reduce((x,a)=>x+a.cuota,0),0);
+  const potencial = grupos.reduce((s,g)=>s+(PLAZAS_GRUPO-g.activos.length)*g.cuota,0);
+  const indiv = db.alumnos.filter(a=>a.modalidad!=='Grupo' && a.estado==='activo').sort((a,b)=>a.idioma.localeCompare(b.idioma));
+  const chip = a => `<span class="${a.estado==='interesado'?'int':''}" onclick="abrirFicha(${a.id})">${esc(a.nombre.split(' ').slice(0,2).join(' '))}${a.estado==='interesado'?' (interesado)':''}</span>`;
+  return `
+  <div class="kpis">
+    <div class="card kpi"><div class="etq">Grupos abiertos</div><div class="valor">${grupos.length}</div><div class="det">Máximo ${PLAZAS_GRUPO} alumnos por grupo</div></div>
+    <div class="card kpi"><div class="etq">Ocupación de los grupos</div><div class="valor">${totales?Math.round(ocupadas/totales*100):0} %</div><div class="det">${ocupadas} de ${totales} plazas ocupadas</div></div>
+    <div class="card kpi"><div class="etq">Ingresos de grupos</div><div class="valor">${eur(ingresos)}</div><div class="det">al mes con la ocupación actual</div></div>
+    <div class="card kpi"><div class="etq">Si se llenan las plazas libres</div><div class="valor">+${eur(potencial)}</div><div class="det">al mes más (${totales-ocupadas} plazas libres)</div></div>
+  </div>
+  <h2>Grupos</h2>
+  <div class="grupos">${grupos.map(g=>{
+    const n=g.activos.length, pct=Math.round(n/PLAZAS_GRUPO*100), clase = pct>=75?'lleno':pct>=40?'medio':'bajo';
+    return `<div class="card grupo">
+      <h3 class="i-${g.idioma}">${bandera(g.idioma)}${g.idioma} ${g.nivel}</h3><div class="hor">${esc(g.horario)} · ${eur(g.cuota)}/mes</div>
+      <div class="ocup"><span>${n} de ${PLAZAS_GRUPO} plazas</span><b>${eur(n*g.cuota)}/mes</b></div>
+      <div class="barra ${clase}"><span style="width:${pct}%"></span></div>
+      <div class="ocup" style="color:var(--muted)"><span>${PLAZAS_GRUPO-n} ${PLAZAS_GRUPO-n===1?'plaza libre':'plazas libres'}</span><span>+${eur((PLAZAS_GRUPO-n)*g.cuota)} posibles</span></div>
+      <div class="nombres">${g.activos.map(chip).join('')}${g.interesados.map(chip).join('')}</div>
+    </div>`;}).join('')}</div>
+  <h2 style="margin-top:24px">Clases particulares y online (${indiv.length})</h2>
+  <div class="tabla-wrap"><table><thead><tr><th>Alumno</th><th>Idioma</th><th>Modalidad · horario</th><th>Cuota</th></tr></thead>
+  <tbody>${indiv.map(a=>`<tr onclick="abrirFicha(${a.id})"><td><b>${esc(a.nombre)}</b></td><td class="i-${a.idioma}">${bandera(a.idioma)}${a.idioma} ${a.nivel}</td><td>${a.modalidad} · ${esc(a.horario)}</td><td>${eur(a.cuota)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function tareaHTML(t){
+  let boton = '';
+  if(t.accion==='pagar') boton = `<button class="btn" onclick="marcarPagado(${t.pagoId})">Marcar cobrado</button>`;
+  if(t.accion==='hecho') boton = `<button class="btn sec" onclick="completarTarea('${t.id}',${t.a.id})">Hecho</button>`;
+  return `<div class="tarea"><span class="chip c-${t.tipo}">${t.tipo}</span>
+    <div class="info"><div class="nom" onclick="abrirFicha(${t.a.id})">${esc(t.a.nombre)} <span class="i-${t.a.idioma}" style="font-weight:400;font-size:13px">${bandera(t.a.idioma)}${t.a.idioma} ${t.a.nivel}</span></div>
+    <div class="txt">${esc(t.texto)} · ${esc(t.a.telefono)}</div></div>${t.msg?waLink(t.a,t.msg):''}${boton}</div>`;
+}
+
+function vistaAlumnos(){
+  const q = ui.busca.trim().toLowerCase();
+  const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  const lista = db.alumnos.filter(a =>
+      (!q || norm(a.nombre+' '+a.email+' '+a.telefono.replace(/ /g,'')+' '+a.telefono).includes(norm(q))) &&
+      (!ui.fIdioma || a.idioma===ui.fIdioma) && (!ui.fEstado || a.estado===ui.fEstado))
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  const opt = (arr,val) => arr.map(x=>`<option ${x===val?'selected':''}>${x}</option>`).join('');
+  return `
+  <h2>Alumnos (${lista.length} de ${db.alumnos.length})</h2>
+  <div class="filtros">
+    <input id="busca" placeholder="Buscar por nombre, email o teléfono" value="${esc(ui.busca)}" oninput="ui.busca=this.value;ui._foco=true;render()">
+    <select onchange="ui.fIdioma=this.value;ui._foco=false;render()"><option value="">Todos los idiomas</option>${opt(IDIOMAS,ui.fIdioma)}</select>
+    <select onchange="ui.fEstado=this.value;ui._foco=false;render()"><option value="">Todos los estados</option>
+      ${['activo','interesado','perdido','baja'].map(e=>`<option value="${e}" ${e===ui.fEstado?'selected':''}>${e[0].toUpperCase()+e.slice(1)}</option>`).join('')}</select>
+  </div>
+  <div class="tabla-wrap"><table>
+    <thead><tr><th>Nombre</th><th>Idioma</th><th>Modalidad · horario</th><th>Cuota</th><th>Estado</th><th>Último contacto</th></tr></thead>
+    <tbody>${lista.map(a=>{ const u=ultimoContacto(a.id); const deuda=db.pagos.some(p=>p.alumnoId===a.id&&p.estado==='pendiente');
+      return `<tr onclick="abrirFicha(${a.id})">
+      <td><b>${esc(a.nombre)}</b>${deuda?' <span class="chip c-Cobro">Recibo pendiente</span>':''}${a.estado==='activo'&&a.faltas>=3?' <span class="chip c-Riesgo">Riesgo</span>':''}<br><span style="color:var(--muted);font-size:13px">${esc(a.telefono)}</span></td>
+      <td class="i-${a.idioma}">${bandera(a.idioma)}${a.idioma} ${a.nivel}</td><td>${a.modalidad} · ${esc(a.horario)}</td><td>${eur(a.cuota)}</td>
+      <td><span class="chip e-${a.estado}">${a.estado}</span></td>
+      <td>${u?fmtFecha(u.fecha)+'<br><span style="color:var(--muted);font-size:13px">'+u.tipo+'</span>':''}</td></tr>`;}).join('')
+      || '<tr><td colspan="6" class="vacio">No hay alumnos con esos filtros.</td></tr>'}</tbody>
+  </table></div>`;
+}
+
+function camposAlumno(a, pref){
+  const sel = (id,arr,val) => `<select id="${pref}${id}">${arr.map(x=>`<option ${x===val?'selected':''}>${x}</option>`).join('')}</select>`;
+  return `<div class="grid">
+    <label>Nombre y apellidos<input id="${pref}nombre" value="${esc(a.nombre)}" required></label>
+    <label>Teléfono<input id="${pref}telefono" value="${esc(a.telefono)}"></label>
+    <label>Email<input id="${pref}email" value="${esc(a.email)}"></label>
+    <label>Idioma${sel('idioma',IDIOMAS,a.idioma)}</label>
+    <label>Nivel${sel('nivel',NIVELES,a.nivel)}</label>
+    <label>Modalidad${sel('modalidad',MODALIDADES,a.modalidad)}</label>
+    <label>Grupo u horario<input id="${pref}horario" value="${esc(a.horario)}" placeholder="L y X 19:30"></label>
+    <label>Cuota mensual (€)<input id="${pref}cuota" type="number" min="0" value="${a.cuota}"></label>
+    <label>Objetivo${sel('objetivo',OBJETIVOS,a.objetivo)}</label>
+    <label>Cómo nos conoció${sel('origen',ORIGENES,a.origen)}</label>
+    <label>Faltas seguidas<input id="${pref}faltas" type="number" min="0" value="${a.faltas}"></label>
+    <label>Examen oficial<input id="${pref}exnombre" value="${esc(a.examen.nombre)}" placeholder="B2 First, DELF B1, CILS..."></label>
+    <label>Fecha del examen<input id="${pref}exfecha" type="date" value="${a.examen.fecha}"></label>
+    <label class="ancho">Notas<textarea id="${pref}notas" rows="2">${esc(a.notas)}</textarea></label>
+  </div>`;
+}
+function leerCampos(pref){
+  const v = id => document.getElementById(pref+id).value;
+  return {nombre:v('nombre').trim(), telefono:v('telefono').trim(), email:v('email').trim(), idioma:v('idioma'), nivel:v('nivel'),
+    modalidad:v('modalidad'), horario:v('horario').trim(), cuota:Number(v('cuota'))||0, objetivo:v('objetivo'), origen:v('origen'),
+    faltas:Number(v('faltas'))||0, examen:{nombre:v('exnombre').trim(), fecha:v('exfecha')}, notas:v('notas').trim()};
+}
+
+function vistaNuevo(){
+  const vacio = {nombre:'',telefono:'',email:'',idioma:'Inglés',nivel:'A2',modalidad:'Grupo',horario:'',cuota:85,objetivo:'Trabajo',origen:'Web',faltas:0,examen:{nombre:'',fecha:''},notas:''};
+  return `<div class="card" style="max-width:880px">
+    <h2>Nuevo alumno</h2>
+    ${camposAlumno(vacio,'n-')}
+    <div class="grid" style="margin-top:12px">
+      <label>Estado<select id="n-estado"><option value="interesado">Interesado (aún no matriculado)</option><option value="activo">Activo (matriculado hoy)</option></select></label>
+      <label>Clase de prueba (opcional)<input id="n-prueba" type="date"></label>
+    </div>
+    <div class="fila-acc"><button class="btn" onclick="crearAlumno()">Guardar alumno</button></div>
+  </div>`;
+}
+
+function crearAlumno(){
+  const d = leerCampos('n-');
+  if(!d.nombre){ aviso('Falta el nombre'); return; }
+  const estado = document.getElementById('n-estado').value;
+  const prueba = document.getElementById('n-prueba').value;
+  const a = Object.assign({id:db.seq++, estado, alta: estado==='activo'?hoyISO:'', fechaBaja:'', motivoBaja:''}, d);
+  db.alumnos.push(a);
+  db.contactos.push({id:db.seq++, alumnoId:a.id, fecha:hoyISO, tipo:'Visita', nota:'Alta en el CRM'});
+  if(prueba) db.contactos.push({id:db.seq++, alumnoId:a.id, fecha:prueba, tipo:'Clase de prueba', nota: prueba>hoyISO?'Clase de prueba programada':'Clase de prueba'});
+  if(estado==='activo') db.pagos.push({id:db.seq++, alumnoId:a.id, mes:mesKey(0), importe:a.cuota, estado:'pendiente'});
+  guardar(); aviso('Alumno guardado'); ui.vista='alumnos'; render(); abrirFicha(a.id);
+}
+
+/* ================== Ficha ================== */
+function abrirFicha(id){ ui.fichaId=id; pintarFicha(); document.getElementById('modal').classList.add('abierto'); }
+function cerrarFicha(){ ui.fichaId=null; document.getElementById('modal').classList.remove('abierto'); }
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') cerrarFicha(); });
+
+function pintarFicha(){
+  const a = alumno(ui.fichaId); if(!a) return;
+  const pagos = pagosDe(a.id), cs = contactosDe(a.id);
+  const deuda = pagos.filter(p=>p.estado==='pendiente').reduce((s,p)=>s+p.importe,0);
+  let acciones = '';
+  if(a.estado==='interesado') acciones = `<button class="btn" onclick="matricular(${a.id})">Matricular hoy</button><input id="motivo" placeholder="Motivo si no se matricula" style="flex:1;min-width:200px"><button class="btn sec" onclick="marcarPerdido(${a.id})">Marcar como perdido</button>`;
+  if(a.estado==='perdido') acciones = `<span style="color:var(--muted);font-size:14px">No se matriculó (${fmtFecha(a.fechaBaja)}): ${esc(a.motivoBaja)}</span><button class="btn" onclick="recuperar(${a.id})">Volver a interesado</button>`;
+  if(a.estado==='activo') acciones = `<input id="motivo" placeholder="Motivo de la baja" style="flex:1;min-width:200px"><button class="btn peligro" onclick="darBaja(${a.id})">Dar de baja</button>`;
+  if(a.estado==='baja') acciones = `<span style="color:var(--muted);font-size:14px">Baja el ${fmtFecha(a.fechaBaja)}: ${esc(a.motivoBaja)}</span><button class="btn" onclick="matricular(${a.id})">Reactivar</button>`;
+  document.getElementById('ficha').innerHTML = `
+    <div class="ficha-cab"><h2>${esc(a.nombre)}</h2><span class="chip e-${a.estado}">${a.estado}</span>
+      ${waLink(a, `Hola ${nombrePila(a)}, te escribimos de Trilingua. `)}
+      <button class="btn sec" onclick="cerrarFicha()">Cerrar</button></div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:14px">${a.alta?'Alumno desde '+fmtFecha(a.alta)+' · ':''}${deuda?'<b style="color:var(--bad)">Debe '+eur(deuda)+'</b>':'Sin recibos pendientes'}</div>
+    ${camposAlumno(a,'f-')}
+    <div class="fila-acc"><button class="btn" onclick="guardarFicha(${a.id})">Guardar cambios</button>${acciones}</div>
+
+    <div class="seccion"><h3>Pagos</h3>
+      ${pagos.length?`<table><thead><tr><th>Mes</th><th>Importe</th><th>Estado</th><th></th></tr></thead><tbody>
+      ${pagos.map(p=>`<tr style="cursor:default"><td>${fmtMes(p.mes)}</td><td>${eur(p.importe)}</td>
+        <td><span class="chip ${p.estado==='pagado'?'e-activo':'c-Cobro'}">${p.estado}</span></td>
+        <td>${p.estado==='pendiente'?`<button class="btn" onclick="marcarPagado(${p.id})">Marcar cobrado</button>`:''}</td></tr>`).join('')}
+      </tbody></table>`:'<div class="vacio">Sin pagos registrados.</div>'}
+    </div>
+
+    <div class="seccion"><h3>Historial de contactos y visitas</h3>
+      <div class="filtros">
+        <select id="c-tipo">${TIPOS_CONTACTO.map(t=>`<option>${t}</option>`).join('')}</select>
+        <input id="c-fecha" type="date" value="${hoyISO}" style="flex:0">
+        <input id="c-nota" placeholder="Qué se ha hablado o hecho">
+        <button class="btn" onclick="anadirContacto(${a.id})">Añadir</button>
+      </div>
+      ${cs.length?`<ul class="hist">${cs.map(c=>`<li><span class="f">${fmtFecha(c.fecha)}</span><span class="t">${c.tipo}</span><span>${esc(c.nota)}</span></li>`).join('')}</ul>`:'<div class="vacio">Sin contactos.</div>'}
+    </div>`;
+}
+
+function refrescar(){ guardar(); render(); if(ui.fichaId) pintarFicha(); }
+
+function guardarFicha(id){
+  const d = leerCampos('f-'); if(!d.nombre){ aviso('Falta el nombre'); return; }
+  Object.assign(alumno(id), d); refrescar(); aviso('Cambios guardados');
+}
+function marcarPagado(pid){
+  const p = db.pagos.find(x=>x.id===pid); if(!p) return;
+  p.estado='pagado'; refrescar(); aviso('Recibo marcado como cobrado');
+}
+function completarTarea(tid, aid){
+  db.hechas.push(tid);
+  const t = tid.split('-')[0];
+  const nota = {prueba:'Llamada de seguimiento tras la clase de prueba', faltas:'Llamada por faltas seguidas', examen:'Confirmada inscripción al examen'}[t] || 'Tarea completada';
+  db.contactos.push({id:db.seq++, alumnoId:aid, fecha:hoyISO, tipo:'Llamada', nota});
+  refrescar(); aviso('Tarea completada y anotada en el historial');
+}
+function anadirContacto(id){
+  const tipo = document.getElementById('c-tipo').value, fecha = document.getElementById('c-fecha').value || hoyISO, nota = document.getElementById('c-nota').value.trim();
+  db.contactos.push({id:db.seq++, alumnoId:id, fecha, tipo, nota: nota || tipo});
+  refrescar(); aviso('Contacto añadido');
+}
+function matricular(id){
+  const a = alumno(id);
+  a.estado='activo'; a.alta=hoyISO; a.fechaBaja=''; a.motivoBaja=''; a.faltas=0;
+  if(!db.pagos.some(p=>p.alumnoId===id && p.mes===mesKey(0))) db.pagos.push({id:db.seq++, alumnoId:id, mes:mesKey(0), importe:a.cuota, estado:'pendiente'});
+  db.contactos.push({id:db.seq++, alumnoId:id, fecha:hoyISO, tipo:'Visita', nota:'Se matricula en '+a.idioma+' '+a.nivel});
+  refrescar(); aviso(a.nombre+' matriculado');
+}
+function marcarPerdido(id){
+  const a = alumno(id), motivo = document.getElementById('motivo').value.trim() || 'Sin motivo indicado';
+  a.estado='perdido'; a.fechaBaja=hoyISO; a.motivoBaja=motivo;
+  db.contactos.push({id:db.seq++, alumnoId:id, fecha:hoyISO, tipo:'Llamada', nota:'No se matricula. Motivo: '+motivo});
+  refrescar(); aviso('Marcado como perdido');
+}
+function recuperar(id){
+  const a = alumno(id); a.estado='interesado'; a.fechaBaja=''; a.motivoBaja='';
+  db.contactos.push({id:db.seq++, alumnoId:id, fecha:hoyISO, tipo:'Llamada', nota:'Vuelve a interesarse'});
+  refrescar(); aviso('Vuelve a interesado');
+}
+function darBaja(id){
+  const a = alumno(id), motivo = document.getElementById('motivo').value.trim() || 'Sin motivo indicado';
+  a.estado='baja'; a.fechaBaja=hoyISO; a.motivoBaja=motivo;
+  db.contactos.push({id:db.seq++, alumnoId:id, fecha:hoyISO, tipo:'Llamada', nota:'Baja. Motivo: '+motivo});
+  refrescar(); aviso('Baja registrada');
+}
+
+document.getElementById('hoy').textContent = HOY.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+render();
+</script>
+</body>
+</html>
